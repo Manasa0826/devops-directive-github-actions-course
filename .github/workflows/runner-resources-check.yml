@@ -1,0 +1,45 @@
+name: Check Runner Resources
+
+on:
+  workflow_dispatch:   # manual run
+  push:
+    branches:
+      - test-runner/**
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show basic info
+        run: |
+          echo "OS: $RUNNER_OS"
+          echo "Arch: $RUNNER_ARCH"
+          echo "Working Dir:"
+          pwd
+
+      - name: CPU
+        run: |
+          echo "CPU cores:"
+          nproc
+          echo "CPU details:"
+          lscpu
+
+      - name: Memory
+        run: |
+          echo "Memory:"
+          free -h
+
+      - name: Disk
+        run: |
+          echo "Disk usage:"
+          df -h
+
+      - name: Network
+        run: |
+          echo "Network interfaces:"
+          ip a
+
+      - name: Environment variables
+        run: |
+          printenv | sort
