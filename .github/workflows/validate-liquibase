@@ -1,15 +1,19 @@
-name: validate liquibase 
-on: 
-  workflow dispatch
+name: Validate Liquibase
+
+on:
+  workflow_dispatch:
+
 jobs:
-    docker postgress runner:
-      runs on : ubuntu-latest
-      steps:
+  docker-postgres-runner:
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
       - name: Start PostgreSQL container
         run: |
-          docker run -d \  
+          docker run -d \
             --name test-postgres \
             -e POSTGRES_USER=appuser \
             -e POSTGRES_PASSWORD=apppassword \
@@ -30,7 +34,7 @@ jobs:
 
           echo "PostgreSQL did not become ready"
           docker logs test-postgres
-          exit 1   
+          exit 1
 
       - name: Test PostgreSQL connection
         run: |
@@ -54,4 +58,4 @@ jobs:
         if: always()
         run: |
           docker stop test-postgres
-          docker rm test-postgres 
+          docker rm test-postgres
