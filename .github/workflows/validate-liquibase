@@ -1,0 +1,57 @@
+name: validate liquibase 
+on: 
+  workflow dispatch
+jobs:
+    docker postgress runner:
+      runs on : ubuntu-latest
+      steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Start PostgreSQL container
+        run: |
+          docker run -d \  
+            --name test-postgres \
+            -e POSTGRES_USER=appuser \
+            -e POSTGRES_PASSWORD=apppassword \
+            -e POSTGRES_DB=appdb \
+            -p 5432:5432 \
+            postgres:16
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..30}; do
+            if docker exec test-postgres pg_isready -U appuser -d appdb; then
+              echo "PostgreSQL is ready"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          echo "PostgreSQL did not become ready"
+          docker logs test-postgres
+          exit 1   
+
+      - name: Test PostgreSQL connection
+        run: |
+          docker exec test-postgres psql -U appuser -d appdb -c "SELECT version();"
+
+      - name: Create sample table
+        run: |
+          docker exec test-postgres psql -U appuser -d appdb -c "
+          CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL
+          );
+          INSERT INTO users (name) VALUES ('Chethan');
+          SELECT * FROM users;
+          "
+
+      - name: Show running containers
+        run: docker ps
+
+      - name: Stop PostgreSQL container
+        if: always()
+        run: |
+          docker stop test-postgres
+          docker rm test-postgres 
