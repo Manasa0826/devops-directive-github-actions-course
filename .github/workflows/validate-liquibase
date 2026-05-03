@@ -1,10 +1,13 @@
-name: Validate Liquibase
+name: Docker Postgres Runner Test
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - test-runner/**
 
 jobs:
-  docker-postgres-runner:
+  postgres-docker-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,6 +42,17 @@ jobs:
       - name: Test PostgreSQL connection
         run: |
           docker exec test-postgres psql -U appuser -d appdb -c "SELECT version();"
+
+      - name: Create sample table
+        run: |
+          docker exec test-postgres psql -U appuser -d appdb -c "
+          CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL
+          );
+          INSERT INTO users (name) VALUES ('Chethan');
+          SELECT * FROM users;
+          "
 
       - name: Show running containers
         run: docker ps
